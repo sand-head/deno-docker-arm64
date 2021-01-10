@@ -40,7 +40,7 @@ jobs:
         with:
           push: true
           context: ./deno
-          file: buster-slim.Dockerfile
+          file: ./deno/buster-slim.Dockerfile
           platforms: linux/arm64
           tags: |
             ghcr.io/${{ github.repository_owner }}/deno-arm64:buster-slim
