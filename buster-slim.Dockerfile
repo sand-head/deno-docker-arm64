@@ -6,6 +6,9 @@ RUN cargo chef prepare --recipe-path recipe.json
 
 FROM rust:1.49-slim AS cacher
 WORKDIR /app
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get -qq update --no-install-recommends && \
+  apt-get -qq install -y python2 --no-install-recommends
 RUN cargo install cargo-chef
 COPY --from=planner /app/recipe.json recipe.json
 RUN cargo chef cook --release --recipe-path recipe.json
