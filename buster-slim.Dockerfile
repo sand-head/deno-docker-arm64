@@ -20,6 +20,7 @@ RUN cargo chef cook --release --recipe-path recipe.json
 FROM rust:1.49-slim AS builder
 WORKDIR /app
 RUN cargo install cargo-chef
+COPY . .
 COPY --from=cacher /app/target target
 COPY --from=cacher $CARGO_HOME $CARGO_HOME
 
