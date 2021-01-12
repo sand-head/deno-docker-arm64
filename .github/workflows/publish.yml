@@ -43,8 +43,8 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ matrix.base }}-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-buildx-${{ matrix.base }}-
+        key: ${{ runner.os }}_buildx_${{ matrix.base }}_${{ github.sha }}
+        restore-keys: ${{ runner.os }}_buildx_${{ matrix.base }}_
     - name: Build & push image
       uses: docker/build-push-action@v2
       with:

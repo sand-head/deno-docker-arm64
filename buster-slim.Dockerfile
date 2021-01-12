@@ -14,7 +14,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 	  --mount=type=cache,target=/deno/target \
     cargo build --release --locked
 # just for fun, let's also run Deno's tests to see what we get
-RUN cargo test --release --locked
+# RUN cargo test --release --locked
 
 FROM debian:buster-slim AS run
 COPY --from=build /deno/target/release/deno /usr/local/deno
