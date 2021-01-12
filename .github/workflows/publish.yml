@@ -6,8 +6,11 @@ on:
   workflow_dispatch:
 
 jobs:
-  deps-cache-test:
+  publish:
     runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        base: ['buster-slim', 'alpine']
     steps:
     - uses: actions/checkout@v2
     - name: Checkout Deno
@@ -18,6 +21,13 @@ jobs:
         ref: v1.6.3
         fetch-depth: 5
         submodules: true
+    - name: Extract version tags
+      run: |
+        # todo: make this not hard coded
+        version=1.6.3
+        echo "MAJOR=${version%.*.*}" >> $GITHUB_ENV
+        echo "MINOR=${version%.*}" >> $GITHUB_ENV
+        echo "PATCH=${version}" >> $GITHUB_ENV
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v1
     - name: Set up Docker Buildx
@@ -33,53 +43,20 @@ jobs:
       uses: actions/cache@v2
       with:
         path: /tmp/.buildx-cache
-        key: ${{ runner.os }}-buildx-${{ github.sha }}
-        restore-keys: ${{ runner.os }}-buildx-
+        key: ${{ runner.os }}-buildx-${{ matrix.base }}-${{ github.sha }}
+        restore-keys: ${{ runner.os }}-buildx-${{ matrix.base }}-
     - name: Build & push image
       uses: docker/build-push-action@v2
       with:
         push: true
         context: ./deno
-        file: ./buster-slim.Dockerfile
+        file: ./${{ matrix.base }}.Dockerfile
         platforms: linux/arm64
         builder: ${{ steps.buildx.outputs.name }}
         cache-from: type=local,src=/tmp/.buildx-cache
         cache-to: type=local,dest=/tmp/.buildx-cache
         tags: |
-          ghcr.io/${{ github.repository_owner }}/deno-arm64:buster-slim
-  # I already know this works, so let's just keep it commented out for now:
-  # publish:
-  #   runs-on: ubuntu-latest
-  #   strategy:
-  #     matrix:
-  #       base: ['debian', 'ubuntu']
-  #   steps:
-  #   - uses: actions/checkout@v2
-  #   - name: Set up QEMU
-  #     uses: docker/setup-qemu-action@v1
-  #   - name: Set up Docker Buildx
-  #     id: buildx
-  #     uses: docker/setup-buildx-action@v1
-  #   - name: Log into registry
-  #     uses: docker/login-action@v1
-  #     with:
-  #       registry: ghcr.io
-  #       username: ${{ github.repository_owner }}
-  #       password: ${{ secrets.CR_PAT }}
-  #   - name: Cache layers
-  #     uses: actions/cache@v2
-  #     with:
-  #       path: /tmp/.buildx-cache
-  #       key: ${{ runner.os }}-buildx-${{ github.sha }}
-  #       restore-keys: ${{ runner.os }}-buildx-
-  #   - name: Build & push image
-  #     uses: docker/build-push-action@v2
-  #     with:
-  #       push: true
-  #       file: ./${{ matrix.base }}.Dockerfile
-  #       platforms: linux/arm64
-  #       builder: ${{ steps.buildx.outputs.name }}
-  #       cache-from: type=local,src=/tmp/.buildx-cache
-  #       cache-to: type=local,dest=/tmp/.buildx-cache
-  #       tags: |
-  #         ghcr.io/${{ github.repository_owner }}/deno-arm64:${{ matrix.base }}
+          ghcr.io/${{ github.repository_owner }}/deno-arm64:${{ matrix.base }}
+          ghcr.io/${{ github.repository_owner }}/deno-arm64:${{ $MAJOR }}-${{ matrix.base }}
+          ghcr.io/${{ github.repository_owner }}/deno-arm64:${{ $MINOR }}-${{ matrix.base }}
+          ghcr.io/${{ github.repository_owner }}/deno-arm64:${{ $PATCH }}-${{ matrix.base }}

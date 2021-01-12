@@ -1,12 +1,10 @@
-FROM rust:1.49-slim AS build
+FROM rust:1.49-alpine AS build
 WORKDIR /deno
 COPY . .
 
 # we gotta install python or curl for rusty_v8
 # couldn't get python to work, so curl it is!
-ENV DEBIAN_FRONTEND=noninteractive
-RUN apt-get -qq update --no-install-recommends && \
-    apt-get -qq install -y curl --no-install-recommends
+RUN apk add --no-cache curl
 
 RUN rustup target add wasm32-unknown-unknown && rustup target add wasm32-wasi
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
@@ -16,7 +14,7 @@ RUN --mount=type=cache,target=/usr/local/cargo/registry \
 # just for fun, let's also run Deno's tests to see what we get
 RUN cargo test --release --locked --all-targets
 
-FROM debian:buster-slim AS run
+FROM alpine:3.12 AS run
 COPY --from=build /deno/target/release/deno /usr/local/deno
 
 ENTRYPOINT ["deno"]
