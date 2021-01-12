@@ -10,9 +10,9 @@ RUN rustup target add wasm32-unknown-unknown && rustup target add wasm32-wasi
 RUN --mount=type=cache,target=/usr/local/cargo/registry \
     --mount=type=cache,target=/usr/local/cargo/git \
 	  --mount=type=cache,target=/deno/target \
-    cargo build --release --locked --all-targets
+    cargo build --release --locked
 # just for fun, let's also run Deno's tests to see what we get
-RUN cargo test --release --locked --all-targets
+RUN cargo test --release --locked
 
 FROM alpine:3.12 AS run
 COPY --from=build /deno/target/release/deno /usr/local/deno
